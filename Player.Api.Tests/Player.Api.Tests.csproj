@@ -8,26 +8,28 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
-        <PackageReference Include="xunit" Version="2.9.3"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4"/>
+        <PackageReference Include="AwesomeAssertions" Version="9.5.0" />
+        <PackageReference Include="coverlet.collector" Version="6.0.4" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="Xunit.DependencyInjection" Version="9.9.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Xunit"/>
+        <Using Include="Xunit" />
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\Config\appsetting.dev.json">
-        <Link>appsetting.dev.json</Link>
-      </Content>
-      <Content Include="..\Config\appsetting.stage.json">
-        <Link>appsetting.stage.json</Link>
-      </Content>
-      <Content Include="..\Config\appsettings.json">
-        <Link>appsettings.json</Link>
-      </Content>
+        <ProjectReference Include="..\GamePlatform.Tests.Configuration\GamePlatform.Tests.Configuration.csproj" />
+        <ProjectReference Include="..\GamePlatform.Tests.Infrastructure\GamePlatform.Tests.Infrastructure.csproj" />
+        <ProjectReference Include="..\GamePlatform.Tests.Steps\GamePlatform.Tests.Steps.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\Config\appsettings.dev.json" Link="appsettings.dev.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="..\Config\appsettings.int.json" Link="appsettings.int.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="..\Config\appsettings.stage.json" Link="appsettings.stage.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>
