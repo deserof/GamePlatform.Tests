@@ -5,4 +5,6 @@ public class TestSettings
     public const string SectionName = "TestSettings";
 
     public required string PlayersApi { get; init; }
+
+    public required TesterCredentials Tester { get; init; }
 }

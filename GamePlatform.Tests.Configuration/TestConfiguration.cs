@@ -5,6 +5,8 @@ namespace GamePlatform.Tests.Configuration;
 
 public static class TestConfiguration
 {
+    public const string UserSecretsId = "gameplatform-tests-player-api";
+
     private const string EnvironmentVariableName = "TEST_ENVIRONMENT";
     private const string DefaultEnvironment = "dev";
 
@@ -24,6 +26,7 @@ public static class TestConfiguration
         new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile($"appsettings.{EnvironmentName}.json", optional: false)
+            .AddUserSecrets(UserSecretsId)
             .AddEnvironmentVariables()
             .Build();
 }
