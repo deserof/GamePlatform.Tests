@@ -54,4 +54,4 @@ OpenAPI schema is left as provided. Steps use real response shapes where the con
 - Create returns `_id`, while getOne/getAll return `id` for the same identifier.
 - Login and player endpoints do not match the documented DTO field names/types.
 
-Workarounds live in `AuthSteps` / `PlayerSteps` and models `LoginResponse`, `PlayerApiModel` (not in the generated NSwag client).
+Workarounds live in `AuthSteps` / `PlayerSteps` and models in `GamePlatform.Tests.Steps/Models` (`LoginResponse`, `PlayerApiModel` — not in the generated NSwag client).

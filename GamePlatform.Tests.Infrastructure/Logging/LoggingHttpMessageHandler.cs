@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 
 namespace GamePlatform.Tests.Infrastructure.Logging;
@@ -6,6 +7,20 @@ namespace GamePlatform.Tests.Infrastructure.Logging;
 public sealed class LoggingHttpMessageHandler(ILogger<LoggingHttpMessageHandler> logger)
     : DelegatingHandler
 {
+    private const string Redacted = "***";
+
+    private static readonly HashSet<string> SensitiveKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "password",
+        "password_change",
+        "password_repeat",
+        "accessToken",
+        "access_token",
+        "refreshToken",
+        "refresh_token",
+        "token",
+    };
+
     private static readonly JsonSerializerOptions PrettyJson = new()
     {
         WriteIndented = true,
@@ -57,12 +72,51 @@ public sealed class LoggingHttpMessageHandler(ILogger<LoggingHttpMessageHandler>
 
         try
         {
-            using var document = JsonDocument.Parse(body);
-            return JsonSerializer.Serialize(document.RootElement, PrettyJson);
+            var node = JsonNode.Parse(body);
+            if (node is not null)
+            {
+                RedactSensitiveFields(node);
+            }
+
+            return node?.ToJsonString(PrettyJson) ?? body;
         }
         catch (JsonException)
         {
             return body;
+        }
+    }
+
+    private static void RedactSensitiveFields(JsonNode node)
+    {
+        switch (node)
+        {
+            case JsonObject obj:
+                foreach (var property in obj.ToList())
+                {
+                    if (SensitiveKeys.Contains(property.Key))
+                    {
+                        obj[property.Key] = Redacted;
+                        continue;
+                    }
+
+                    if (property.Value is not null)
+                    {
+                        RedactSensitiveFields(property.Value);
+                    }
+                }
+
+                break;
+
+            case JsonArray array:
+                foreach (var item in array)
+                {
+                    if (item is not null)
+                    {
+                        RedactSensitiveFields(item);
+                    }
+                }
+
+                break;
         }
     }
 }

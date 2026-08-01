@@ -1,3 +1,4 @@
+using System.Net;
 using AwesomeAssertions;
 using GamePlatform.Tests.Steps;
 
@@ -10,8 +11,11 @@ public class PlayersApiScenarioTests(AuthSteps authSteps, PlayerSteps playerStep
     [Fact]
     public async Task Login_ShouldReturnAccessToken()
     {
-        var token = await authSteps.LoginAsTesterAsync();
+        var (statusCode, token) = await authSteps.LoginAsTesterAsync();
 
+        // BUG
+        // statusCode.Should().Be(HttpStatusCode.OK);
+        statusCode.Should().Be(HttpStatusCode.Created);
         token.Should().NotBeNull();
         token.AccessToken.Should().NotBeNullOrWhiteSpace();
         token.User.Should().NotBeNull();
@@ -21,19 +25,19 @@ public class PlayersApiScenarioTests(AuthSteps authSteps, PlayerSteps playerStep
     [Fact]
     public async Task PlayersLifecycle_ShouldCreateGetSortDeleteAndVerifyEmpty()
     {
-        await authSteps.LoginAsTesterAsync();
+        var runPrefix = Guid.NewGuid().ToString("N")[..8];
 
-        var preexisting = await playerSteps.GetAllPlayersAsync();
-        if (preexisting.Count > 0)
-        {
-            await playerSteps.DeletePlayersAsync(preexisting.Select(p => p.Id));
-        }
+        var (loginStatus, _) = await authSteps.LoginAsTesterAsync();
+        // BUG
+        //loginStatus.Should().Be(HttpStatusCode.OK);
+        loginStatus.Should().Be(HttpStatusCode.Created);
 
-        var created = await playerSteps.CreatePlayersAsync(PlayersToCreate);
+        var created = await playerSteps.CreatePlayersAsync(PlayersToCreate, runPrefix);
 
         created.Should().HaveCount(PlayersToCreate);
-        foreach (var (request, response) in created)
+        foreach (var (statusCode, request, response) in created)
         {
+            statusCode.Should().Be(HttpStatusCode.Created);
             response.Id.Should().NotBeNullOrWhiteSpace();
             response.Email.Should().Be(request.Email);
             response.Username.Should().Be(request.Username);
@@ -42,8 +46,11 @@ public class PlayersApiScenarioTests(AuthSteps authSteps, PlayerSteps playerStep
         }
 
         var first = created[0];
-        var profile = await playerSteps.GetPlayerByEmailAsync(first.Request.Email);
+        var (profileStatus, profile) = await playerSteps.GetPlayerByEmailAsync(first.Request.Email);
 
+        // BUG
+        //profileStatus.Should().Be(HttpStatusCode.OK);
+        profileStatus.Should().Be(HttpStatusCode.Created);
         profile.Should().NotBeNull();
         profile.Id.Should().Be(first.Response.Id);
         profile.Email.Should().Be(first.Request.Email);
@@ -51,16 +58,19 @@ public class PlayersApiScenarioTests(AuthSteps authSteps, PlayerSteps playerStep
         profile.Name.Should().Be(first.Request.Name);
         profile.Surname.Should().Be(first.Request.Surname);
 
-        var allPlayers = await playerSteps.GetAllPlayersAsync();
-        var sortedByName = allPlayers.OrderBy(p => p.Name).ToList();
+        var (getAllStatus, ownedPlayers) = await playerSteps.GetPlayersByEmailPrefixAsync(runPrefix);
+        var sortedByName = ownedPlayers.OrderBy(p => p.Name).ToList();
 
-        allPlayers.Should().HaveCount(PlayersToCreate);
+        getAllStatus.Should().Be(HttpStatusCode.OK);
+        ownedPlayers.Should().HaveCount(PlayersToCreate);
         sortedByName.Should().BeInAscendingOrder(p => p.Name);
         sortedByName.Select(p => p.Id).Should().BeEquivalentTo(created.Select(p => p.Response.Id));
 
-        await playerSteps.DeletePlayersAsync(created.Select(p => p.Response.Id));
+        var deleteStatuses = await playerSteps.DeletePlayersAsync(created.Select(p => p.Response.Id));
+        deleteStatuses.Should().OnlyContain(s => s == HttpStatusCode.OK);
 
-        var playersAfterDelete = await playerSteps.GetAllPlayersAsync();
+        var (afterDeleteStatus, playersAfterDelete) = await playerSteps.GetPlayersByEmailPrefixAsync(runPrefix);
+        afterDeleteStatus.Should().Be(HttpStatusCode.OK);
         playersAfterDelete.Should().BeEmpty();
     }
 }

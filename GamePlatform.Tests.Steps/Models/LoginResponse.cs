@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace GamePlatform.Tests.Infrastructure.Clients;
+namespace GamePlatform.Tests.Steps.Models;
 
 /// <summary>
 /// Real login response (OpenAPI TokenDTO does not match the API).

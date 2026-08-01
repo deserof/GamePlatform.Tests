@@ -1,13 +1,16 @@
+using System.Net;
 using System.Net.Http.Json;
 using GamePlatform.Tests.Configuration;
 using GamePlatform.Tests.Infrastructure.Auth;
 using GamePlatform.Tests.Infrastructure.Clients;
+using GamePlatform.Tests.Steps.Models;
 
 namespace GamePlatform.Tests.Steps;
 
 public class AuthSteps(IHttpClientFactory httpClientFactory, AuthTokenStore tokenStore)
 {
-    public Task<LoginResponse> LoginAsTesterAsync(CancellationToken cancellationToken = default)
+    public Task<(HttpStatusCode StatusCode, LoginResponse Body)> LoginAsTesterAsync(
+        CancellationToken cancellationToken = default)
     {
         var credentials = new CredentialsDTO
         {
@@ -18,13 +21,12 @@ public class AuthSteps(IHttpClientFactory httpClientFactory, AuthTokenStore toke
         return LoginAsync(credentials, cancellationToken);
     }
 
-    public async Task<LoginResponse> LoginAsync(
+    public async Task<(HttpStatusCode StatusCode, LoginResponse Body)> LoginAsync(
         CredentialsDTO credentials,
         CancellationToken cancellationToken = default)
     {
         var client = httpClientFactory.CreateClient(nameof(IPlayerApiClient));
         using var response = await client.PostAsJsonAsync("api/tester/login", credentials, cancellationToken);
-        response.EnsureSuccessStatusCode();
 
         var login = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Login response was empty.");
@@ -35,6 +37,6 @@ public class AuthSteps(IHttpClientFactory httpClientFactory, AuthTokenStore toke
         }
 
         tokenStore.AccessToken = login.AccessToken;
-        return login;
+        return (response.StatusCode, login);
     }
 }
