@@ -1,4 +1,3 @@
-using GamePlatform.Tests.Steps;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GamePlatform.Tests.Steps;
