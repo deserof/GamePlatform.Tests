@@ -47,12 +47,27 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
-          if [ ! -d allure-results ] || [ -z "$(ls -A allure-results 2>/dev/null)" ]; then
-            echo "::error::allure-results is missing or empty (cwd=$(pwd))"
+          RESULTS_DIR=""
+          while IFS= read -r -d '' dir; do
+            if [ -n "$(find "$dir" -type f -print -quit)" ]; then
+              RESULTS_DIR="$dir"
+              break
+            fi
+          done < <(find . -type d -name 'allure-results' -print0)
+
+          if [ -z "$RESULTS_DIR" ]; then
+            echo "::error::No non-empty allure-results found (cwd=$(pwd))"
             find . -type d -name 'allure-results' -print
             exit 1
           fi
-          ls -la allure-results
+
+          echo "Using: $RESULTS_DIR"
+          ls -la "$RESULTS_DIR"
+
+          # Normalize to repo-root path for artifacts / local docs
+          rm -rf allure-results
+          cp -a "$RESULTS_DIR" allure-results
+
           npm install -g allure-commandline
           allure generate allure-results -o allure-report --clean
 
