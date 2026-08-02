@@ -2,7 +2,6 @@ using System.Net;
 using Allure.Net.Commons;
 using Allure.Net.Commons.Attributes;
 using AwesomeAssertions;
-using GamePlatform.Tests.Steps;
 using GamePlatform.Tests.Steps.Fixtures;
 using GamePlatform.Tests.Steps.Steps;
 
