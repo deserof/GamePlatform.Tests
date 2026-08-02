@@ -35,8 +35,8 @@ jobs:
       - name: Test
         env:
           TEST_ENVIRONMENT: ${{ inputs.environment }}
-          TestSettings__Tester__Email: ${{ secrets.TESTER_EMAIL }}
-          TestSettings__Tester__Password: ${{ secrets.TESTER_PASSWORD }}
+          TestSettings__Tester__Email: ${{ secrets.TESTSETTINGS__TESTER__EMAIL }}
+          TestSettings__Tester__Password: ${{ secrets.TESTSETTINGS__TESTER__PASSWORD }}
         run: >
           dotnet test Player.Api.Tests/Player.Api.Tests.csproj
           --configuration Release
