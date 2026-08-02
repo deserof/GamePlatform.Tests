@@ -1,10 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using GamePlatform.Tests.Infrastructure.Reporting;
 using Microsoft.Extensions.Logging;
 
 namespace GamePlatform.Tests.Infrastructure.Logging;
 
-public sealed class LoggingHttpMessageHandler(ILogger<LoggingHttpMessageHandler> logger)
+public sealed class LoggingHttpMessageHandler(
+    ILogger<LoggingHttpMessageHandler> logger,
+    IReportStepTracer reportStepTracer)
     : DelegatingHandler
 {
     private const string Redacted = "***";
@@ -26,28 +29,35 @@ public sealed class LoggingHttpMessageHandler(ILogger<LoggingHttpMessageHandler>
         WriteIndented = true,
     };
 
-    protected override async Task<HttpResponseMessage> SendAsync(
+    protected override Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
         var path = request.RequestUri?.PathAndQuery ?? request.RequestUri?.ToString() ?? "(unknown)";
-        var requestBody = FormatBody(await ReadContentAsStringAsync(request.Content, cancellationToken));
+        var stepName = $"{request.Method} {path}";
 
-        logger.LogInformation(
-            "Sent {Method} to {Path}\nBody:\n{RequestBody}",
-            request.Method,
-            path,
-            requestBody);
+        return reportStepTracer.RunStepAsync(stepName, async () =>
+        {
+            var requestBody = FormatBody(await ReadContentAsStringAsync(request.Content, cancellationToken));
+            reportStepTracer.AttachText("request", requestBody);
 
-        var response = await base.SendAsync(request, cancellationToken);
-        var responseBody = FormatBody(await ReadContentAsStringAsync(response.Content, cancellationToken));
+            logger.LogInformation(
+                "Sent {Method} to {Path}\nBody:\n{RequestBody}",
+                request.Method,
+                path,
+                requestBody);
 
-        logger.LogInformation(
-            "Received status {StatusCode}\nBody:\n{ResponseBody}",
-            (int)response.StatusCode,
-            responseBody);
+            var response = await base.SendAsync(request, cancellationToken);
+            var responseBody = FormatBody(await ReadContentAsStringAsync(response.Content, cancellationToken));
+            reportStepTracer.AttachText("response", $"Status: {(int)response.StatusCode}\n{responseBody}");
 
-        return response;
+            logger.LogInformation(
+                "Received status {StatusCode}\nBody:\n{ResponseBody}",
+                (int)response.StatusCode,
+                responseBody);
+
+            return response;
+        });
     }
 
     private static async Task<string> ReadContentAsStringAsync(

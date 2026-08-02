@@ -5,7 +5,7 @@ using GamePlatform.Tests.Infrastructure.Auth;
 using GamePlatform.Tests.Infrastructure.Clients;
 using GamePlatform.Tests.Steps.Models;
 
-namespace GamePlatform.Tests.Steps;
+namespace GamePlatform.Tests.Steps.Steps;
 
 public class AuthSteps(IHttpClientFactory httpClientFactory, AuthTokenStore tokenStore)
 {

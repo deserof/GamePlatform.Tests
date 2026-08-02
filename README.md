@@ -1,57 +1,78 @@
 # GamePlatform.Tests
 
-## User Secrets (credentials)
+C# API tests (xUnit + HttpClient + Allure)
 
-Do not commit real tester email/password. They are loaded from .NET User Secrets (local) or environment variables (CI).
+## !!! BUGS !!!
 
-Priority: `appsettings.{env}.json` → User Secrets → environment variables.
+- **login** - OpenAPI expected `access_token` / oauth-style fields; real response is `accessToken` + a `user` object. Also returns **201** instead of **200**
+- **create** - OpenAPI expected `id: int`; real response has string `_id` (and also passwords / `__v`)
+- **create** - returns `_id`, getOne/getAll return `id`
+- **getOne** - OpenAPI expected 201 + int id; actual is **200** + string `id`
+- **getAll** - OpenAPI shows a single object; actual is an array, with string `id` (not `_id`)
+- **delete** - path `id` is documented as int, but you need a string ObjectId
 
-### Setup (local)
+I don't use generated NSwag client because the OpenAPI specification mismatches the real contract. So I decided to write tests with HttpClient. On a real project, I'd insta raise bugs for this stuff
+
+## How to run
+
+```bash
+dotnet test Player.Api.Tests/Player.Api.Tests.csproj
+```
+
+Allure:
+
+```bash
+dotnet test Player.Api.Tests/Player.Api.Tests.csproj -s Player.Api.Tests/allure.runsettings
+```
+
+Results check in `./allure-results`
+
+View the report:
+
+```bash
+# if you have Allure CLI
+allure serve allure-results
+
+# or docker put your absolute path to allure-results
+docker run -it --rm -p 5050:5050 \
+  -v "/absolute/path/to/GamePlatform.Tests/allure-results:/app/allure-results" \
+  frankescobar/allure-docker-service
+```
+
+Open http://localhost:5050
+
+Report example:
+
+![allure](docs/allure-report-example.png)
+
+## Tester credentials
+
+Locally use user secrets, in CI use env vars
+
+Load order: `appsettings.{env}.json` -> user secrets -> environment variables
+
+Env is selected via `TEST_ENVIRONMENT` (default is `dev`)
 
 ```bash
 dotnet user-secrets init --project Player.Api.Tests --id gameplatform-tests-player-api
-
 dotnet user-secrets set "TestSettings:Tester:Email" "YOUR_EMAIL" --project Player.Api.Tests
 dotnet user-secrets set "TestSettings:Tester:Password" "YOUR_PASSWORD" --project Player.Api.Tests
-
-dotnet user-secrets list --project Player.Api.Tests
 ```
 
-### CI / remote
-
-```bash
-# PowerShell
+```powershell
 $env:TestSettings__Tester__Email = "YOUR_EMAIL"
 $env:TestSettings__Tester__Password = "YOUR_PASSWORD"
+```
 
-# bash
+```bash
 export TestSettings__Tester__Email="YOUR_EMAIL"
 export TestSettings__Tester__Password="YOUR_PASSWORD"
 ```
 
-## Generate Player API HTTP client
+## Regenerating the OpenAPI client
 
-Run from the repository root:
+From the repo root, if you need to regenerate the NSwag client:
 
 ```bash
 nswag openapi2csclient /input:GamePlatform.Tests.Infrastructure/OpenApi/PlayerApi.json /classname:PlayerApiClient /namespace:GamePlatform.Tests.Infrastructure.Clients /output:GamePlatform.Tests.Infrastructure/Clients/PlayerApiClient.cs /GenerateClientInterfaces:true /UseBaseUrl:false /InjectHttpClient:true /DisposeHttpClient:false /GenerateExceptionClasses:true /ExceptionClass:PlayerApiException /JsonLibrary:SystemTextJson /GenerateOptionalParameters:true /OperationGenerationMode:SingleClientFromOperationId
 ```
-
-## Contract mismatches (OpenAPI vs real API)
-
-OpenAPI schema is left as provided. Steps use real response shapes where the contract is wrong.
-
-| Endpoint | OpenAPI | Actual API |
-|---|---|---|
-| `POST /api/tester/login` | `TokenDTO`: `access_token`, `token_type`, `expires_in`, `scope` | `{ "accessToken": "...", "user": { ... } }` |
-| `POST /api/automationTask/create` | `PlayerResponseDTO.id` as `integer` | `_id` as **string** (Mongo-like ObjectId); also returns password fields / `__v` |
-| `POST /api/automationTask/getOne` | status **201**, `PlayerResponseDTO.id` as `integer` | status **200**, `id` as **string** |
-| `GET /api/automationTask/getAll` | single `PlayerResponseDTO` | **array** of players; each item has `id` as **string** (not `_id`) |
-| `DELETE /api/automationTask/deleteOne/{id}` | `id` path param as `integer` | `id` is a **string** ObjectId |
-
-### Inconsistencies inside the real API
-
-- Create returns `_id`, while getOne/getAll return `id` for the same identifier.
-- Login and player endpoints do not match the documented DTO field names/types.
-
-Workarounds live in `AuthSteps` / `PlayerSteps` and models in `GamePlatform.Tests.Steps/Models` (`LoginResponse`, `PlayerApiModel` — not in the generated NSwag client).

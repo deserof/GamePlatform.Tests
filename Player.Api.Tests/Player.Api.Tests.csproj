@@ -9,6 +9,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Allure.Xunit" Version="2.15.0">
+            <ExcludeAssets>contentFiles</ExcludeAssets>
+        </PackageReference>
         <PackageReference Include="AwesomeAssertions" Version="9.5.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.4" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -29,9 +32,24 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="..\Config\appsettings.dev.json" Link="appsettings.dev.json" CopyToOutputDirectory="PreserveNewest" />
-        <Content Include="..\Config\appsettings.int.json" Link="appsettings.int.json" CopyToOutputDirectory="PreserveNewest" />
-        <Content Include="..\Config\appsettings.stage.json" Link="appsettings.stage.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="..\Config\appsettings.dev.json">
+          <Link>appsettings.dev.json</Link>
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\Config\appsettings.int.json">
+          <Link>appsettings.int.json</Link>
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\Config\appsettings.stage.json">
+          <Link>appsettings.stage.json</Link>
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <None Update="allureConfig.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="allure.runsettings">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

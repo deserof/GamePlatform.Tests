@@ -29,6 +29,10 @@
 .vs/
 [Bb]in/
 [Oo]bj/
+
+# Allure
+**/allure-results/
+**/allure-report/
 _UpgradeReport_Files/
 [Pp]ackages/
 

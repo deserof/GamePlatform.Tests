@@ -2,41 +2,57 @@ using System.Net;
 using System.Net.Http.Json;
 using GamePlatform.Tests.Infrastructure.Clients;
 using GamePlatform.Tests.Infrastructure.Generators;
+using GamePlatform.Tests.Steps.Fixtures;
 using GamePlatform.Tests.Steps.Models;
 
-namespace GamePlatform.Tests.Steps;
+namespace GamePlatform.Tests.Steps.Steps;
 
-public class PlayerSteps(IHttpClientFactory httpClientFactory)
+public class PlayerSteps(IHttpClientFactory httpClientFactory, PlayerTestContext playerTestContext)
 {
+    private HttpClient Client => httpClientFactory.CreateClient(nameof(IPlayerApiClient));
+
     public async Task<(HttpStatusCode StatusCode, PlayerRequestDTO Request, PlayerApiModel Response)> CreatePlayerAsync(
         PlayerRequestDTO? request = null,
         string? runPrefix = null,
         CancellationToken cancellationToken = default)
     {
-        request ??= new PlayerRequestFaker(runPrefix).Generate();
+        if (request is null)
+        {
+            var faker = new PlayerRequestFaker(runPrefix);
+            request = faker.Generate();
+            runPrefix = faker.RunPrefix;
+        }
 
-        var client = CreateClient();
-        using var response = await client.PostAsJsonAsync("api/automationTask/create", request, cancellationToken);
+        using var response = await Client.PostAsJsonAsync("api/automationTask/create", request, cancellationToken);
 
         var body = await response.Content.ReadFromJsonAsync<PlayerApiModel>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Create player response was empty.");
 
-        return (response.StatusCode, request, body);
+        var created = (response.StatusCode, request, body);
+        if (!string.IsNullOrWhiteSpace(runPrefix))
+        {
+            playerTestContext.Track(runPrefix, created);
+        }
+
+        return created;
     }
 
-    public async Task<IReadOnlyList<(HttpStatusCode StatusCode, PlayerRequestDTO Request, PlayerApiModel Response)>> CreatePlayersAsync(
+    public async Task<(
+        string RunPrefix,
+        IReadOnlyList<(HttpStatusCode StatusCode, PlayerRequestDTO Request, PlayerApiModel Response)> Players)> CreatePlayersAsync(
         int count,
         string? runPrefix = null,
         CancellationToken cancellationToken = default)
     {
+        var faker = new PlayerRequestFaker(runPrefix);
         var players = new List<(HttpStatusCode, PlayerRequestDTO, PlayerApiModel)>(count);
 
         for (var i = 0; i < count; i++)
         {
-            players.Add(await CreatePlayerAsync(runPrefix: runPrefix, cancellationToken: cancellationToken));
+            players.Add(await CreatePlayerAsync(request: faker.Generate(), runPrefix: faker.RunPrefix, cancellationToken: cancellationToken));
         }
 
-        return players;
+        return (faker.RunPrefix, players);
     }
 
     public async Task<(HttpStatusCode StatusCode, PlayerApiModel Body)> GetPlayerByEmailAsync(
@@ -44,8 +60,7 @@ public class PlayerSteps(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default)
     {
         var request = new PlayerRequestOneFaker(email).Generate();
-        var client = CreateClient();
-        using var response = await client.PostAsJsonAsync("api/automationTask/getOne", request, cancellationToken);
+        using var response = await Client.PostAsJsonAsync("api/automationTask/getOne", request, cancellationToken);
 
         var body = await response.Content.ReadFromJsonAsync<PlayerApiModel>(cancellationToken: cancellationToken)
             ?? throw new InvalidOperationException("Get player response was empty.");
@@ -56,8 +71,7 @@ public class PlayerSteps(IHttpClientFactory httpClientFactory)
     public async Task<(HttpStatusCode StatusCode, IReadOnlyList<PlayerApiModel> Body)> GetAllPlayersAsync(
         CancellationToken cancellationToken = default)
     {
-        var client = CreateClient();
-        using var response = await client.GetAsync("api/automationTask/getAll", cancellationToken);
+        using var response = await Client.GetAsync("api/automationTask/getAll", cancellationToken);
 
         var players = await response.Content
             .ReadFromJsonAsync<List<PlayerApiModel>>(cancellationToken: cancellationToken);
@@ -80,8 +94,7 @@ public class PlayerSteps(IHttpClientFactory httpClientFactory)
 
     public async Task<HttpStatusCode> DeletePlayerAsync(string id, CancellationToken cancellationToken = default)
     {
-        var client = CreateClient();
-        using var response = await client.DeleteAsync($"api/automationTask/deleteOne/{id}", cancellationToken);
+        using var response = await Client.DeleteAsync($"api/automationTask/deleteOne/{id}", cancellationToken);
         return response.StatusCode;
     }
 
@@ -98,5 +111,30 @@ public class PlayerSteps(IHttpClientFactory httpClientFactory)
         return statuses;
     }
 
-    private HttpClient CreateClient() => httpClientFactory.CreateClient(nameof(IPlayerApiClient));
+    public async Task CleanupPlayersAsync(
+        string? runPrefix,
+        IEnumerable<(HttpStatusCode StatusCode, PlayerRequestDTO Request, PlayerApiModel Response)>? created = null,
+        CancellationToken cancellationToken = default)
+    {
+        var ids = (created ?? [])
+            .Select(p => p.Response.Id)
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (!string.IsNullOrWhiteSpace(runPrefix))
+        {
+            var (_, owned) = await GetPlayersByEmailPrefixAsync(runPrefix, cancellationToken);
+            foreach (var id in owned.Select(p => p.Id).Where(id => !string.IsNullOrWhiteSpace(id)))
+            {
+                ids.Add(id);
+            }
+        }
+
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        await DeletePlayersAsync(ids, cancellationToken);
+    }
 }
