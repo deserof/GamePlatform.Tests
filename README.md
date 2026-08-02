@@ -7,7 +7,7 @@ C# API tests (xUnit + HttpClient + Allure)
 - **login** - OpenAPI expected `access_token` / oauth-style fields; real response is `accessToken` + a `user` object. Also returns **201** instead of **200**
 - **create** - OpenAPI expected `id: int`; real response has string `_id` (and also passwords / `__v`)
 - **create** - returns `_id`, getOne/getAll return `id`
-- **getOne** - OpenAPI expected 201 + int id; actual is **200** + string `id`
+- **getOne** - OpenAPI expected **200** + int id; actual is **201** + string `id`
 - **getAll** - OpenAPI shows a single object; actual is an array, with string `id` (not `_id`)
 - **delete** - path `id` is documented as int, but you need a string ObjectId
 
@@ -19,7 +19,7 @@ I don't use generated NSwag client because the OpenAPI specification mismatches 
 dotnet test Player.Api.Tests/Player.Api.Tests.csproj
 ```
 
-Allure:
+## Allure:
 
 Results check in `./allure-results`
 
@@ -55,7 +55,7 @@ dotnet user-secrets set "TestSettings:Tester:Password" "YOUR_PASSWORD" --project
 
 ## GitHub Actions
 
-Workflow `.github/workflows/api-tests.yml` — manual only. Build, run tests with Allure, upload artifacts.
+Workflow `.github/workflows/api-tests.yml` — manual only. Build, run tests and upload artifacts
 
 Repo secrets:
 
