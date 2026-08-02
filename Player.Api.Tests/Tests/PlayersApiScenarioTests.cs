@@ -25,7 +25,7 @@ public class PlayersApiScenarioTests(
     [AllureIssue("BUG: /api/tester/login returns 201 instead of 200")]
     public async Task Login_ShouldReturnAccessToken()
     {
-        var (statusCode, token) = await authSteps.LoginAsTesterAsync();
+        var (statusCode, token) = await authSteps.LoginAsTesterAsync(refreshToken: true);
 
         statusCode.Should().Be(HttpStatusCode.OK);
         token.Should().NotBeNull();
@@ -63,11 +63,11 @@ public class PlayersApiScenarioTests(
         await authSteps.LoginAsTesterAsync();
         var (runPrefix, created) = await playerSteps.CreatePlayersAsync(PlayersToCreate);
 
-        var (getAllStatus, ownedPlayers) = await playerSteps.GetPlayersByEmailPrefixAsync(runPrefix);
-        var sortedByName = ownedPlayers.OrderBy(p => p.Name).ToList();
+        var (getAllStatus, players) = await playerSteps.GetPlayersByEmailPrefixAsync(runPrefix);
+        var sortedByName = players.OrderBy(p => p.Name).ToList();
 
         getAllStatus.Should().Be(HttpStatusCode.OK);
-        ownedPlayers.Should().HaveCount(PlayersToCreate);
+        players.Should().HaveCount(PlayersToCreate);
         sortedByName.Should().BeInAscendingOrder(p => p.Name);
         sortedByName.Select(p => p.Id).Should().BeEquivalentTo(created.Select(p => p.Response.Id));
     }

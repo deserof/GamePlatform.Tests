@@ -10,8 +10,16 @@ namespace GamePlatform.Tests.Steps.Steps;
 public class AuthSteps(IHttpClientFactory httpClientFactory, AuthTokenStore tokenStore)
 {
     public Task<(HttpStatusCode StatusCode, LoginResponse Body)> LoginAsTesterAsync(
+        bool refreshToken = false,
         CancellationToken cancellationToken = default)
     {
+        if (!refreshToken && !string.IsNullOrWhiteSpace(tokenStore.AccessToken))
+        {
+            return Task.FromResult<(HttpStatusCode, LoginResponse)>((
+                HttpStatusCode.OK,
+                new LoginResponse { AccessToken = tokenStore.AccessToken }));
+        }
+
         var credentials = new CredentialsDTO
         {
             Email = TestConfiguration.Settings.Tester.Email,
