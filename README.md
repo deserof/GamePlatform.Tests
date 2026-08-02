@@ -29,7 +29,7 @@ allure serve allure-results
 
 # or docker
 docker run -it --rm -p 5050:5050 \
-  -v "/absolute/path/to/GamePlatform.Tests/allure-results:/app/allure-results" \
+  -v "/absolute/path/to/GamePlatform.Tests/Player.Api.Tests/bin/Debug/net10.0/allure-results:/app/allure-results" \
   frankescobar/allure-docker-service
 ```
 

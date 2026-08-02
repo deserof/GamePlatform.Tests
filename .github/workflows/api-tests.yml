@@ -41,6 +41,7 @@ jobs:
           dotnet test Player.Api.Tests/Player.Api.Tests.csproj
           --configuration Release
           --no-build
+          --settings Player.Api.Tests/allure.runsettings
           --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload TRX
@@ -56,6 +57,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
-          path: "**/allure-results"
+          path: "**/allure-results/**"
           if-no-files-found: error
             
