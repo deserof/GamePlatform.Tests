@@ -47,6 +47,12 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
+          if [ ! -d allure-results ] || [ -z "$(ls -A allure-results 2>/dev/null)" ]; then
+            echo "::error::allure-results is missing or empty (cwd=$(pwd))"
+            find . -type d -name 'allure-results' -print
+            exit 1
+          fi
+          ls -la allure-results
           npm install -g allure-commandline
           allure generate allure-results -o allure-report --clean
 
@@ -56,7 +62,7 @@ jobs:
         with:
           name: allure-results
           path: allure-results
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Upload Allure report
         if: always()
@@ -64,7 +70,7 @@ jobs:
         with:
           name: allure-report
           path: allure-report
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Upload TRX
         if: always()
