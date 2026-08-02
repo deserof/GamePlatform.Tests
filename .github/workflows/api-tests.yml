@@ -50,3 +50,12 @@ jobs:
           name: test-results
           path: "**/TestResults/**/*.trx"
           if-no-files-found: warn
+      
+      - name: Upload Allure Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results
+          if-no-files-found: error
+            
