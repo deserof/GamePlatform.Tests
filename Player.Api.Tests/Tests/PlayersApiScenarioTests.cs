@@ -64,11 +64,11 @@ public class PlayersApiScenarioTests(
         var (runPrefix, created) = await playerSteps.CreatePlayersAsync(PlayersToCreate);
 
         var (getAllStatus, players) = await playerSteps.GetPlayersByEmailPrefixAsync(runPrefix);
+        // 4. Запросить данные всех пользователей и отсортировать их по имени (/api/automationTask/getAll)
         var sortedByName = players.OrderBy(p => p.Name).ToList();
 
         getAllStatus.Should().Be(HttpStatusCode.OK);
         players.Should().HaveCount(PlayersToCreate);
-        sortedByName.Should().BeInAscendingOrder(p => p.Name);
         sortedByName.Select(p => p.Id).Should().BeEquivalentTo(created.Select(p => p.Response.Id));
     }
 
