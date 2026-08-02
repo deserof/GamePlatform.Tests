@@ -21,23 +21,15 @@ dotnet test Player.Api.Tests/Player.Api.Tests.csproj
 
 Allure:
 
-```bash
-dotnet test Player.Api.Tests/Player.Api.Tests.csproj -s Player.Api.Tests/allure.runsettings
-```
-
-Results check in
-- `Player.Api.Tests/bin/Debug/net10.0/allure-results`
-- `Player.Api.Tests/bin/Release/net10.0/allure-results`
-
-View the report:
+Results check in `./allure-results`
 
 ```bash
 # if you have Allure CLI
-allure serve Player.Api.Tests/bin/Debug/net10.0/allure-results
+allure serve allure-results
 
 # or docker
 docker run -it --rm -p 5050:5050 \
-  -v "/absolute/path/to/GamePlatform.Tests/Player.Api.Tests/bin/Debug/net10.0/allure-results:/app/allure-results" \
+  -v "/absolute/path/to/GamePlatform.Tests/allure-results:/app/allure-results" \
   frankescobar/allure-docker-service
 ```
 
