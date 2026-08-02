@@ -8,6 +8,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamePlatform.Tests.Infrastr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GamePlatform.Tests.Configuration", "GamePlatform.Tests.Configuration\GamePlatform.Tests.Configuration.csproj", "{9EDB7C29-1142-4570-A73C-AA8B053195C2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B1A8F2C3-6D4E-4F9A-9C11-2E8B7D5A1F00}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{C2B9E3D4-7E5F-4A0B-8D22-3F9C8E6B2A11}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{D3C0F4E5-8F60-4B1C-9E33-40AD9F7C3B22}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\api-tests.yml = .github\workflows\api-tests.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +42,8 @@ Global
 		{9EDB7C29-1142-4570-A73C-AA8B053195C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EDB7C29-1142-4570-A73C-AA8B053195C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EDB7C29-1142-4570-A73C-AA8B053195C2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D3C0F4E5-8F60-4B1C-9E33-40AD9F7C3B22} = {C2B9E3D4-7E5F-4A0B-8D22-3F9C8E6B2A11}
 	EndGlobalSection
 EndGlobal

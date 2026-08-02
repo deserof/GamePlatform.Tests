@@ -69,6 +69,12 @@ export TestSettings__Tester__Email="YOUR_EMAIL"
 export TestSettings__Tester__Password="YOUR_PASSWORD"
 ```
 
+## GitHub Actions
+
+Need to add secrets
+
+Workflow `.github/workflows/api-tests.yml` manual only. Build, run tests with Allure, upload `allure-results` + HTML report.
+
 ## Regenerating the OpenAPI client
 
 From the repo root, if you need to regenerate the NSwag client:
